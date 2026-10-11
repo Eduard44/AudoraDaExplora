@@ -1,0 +1,30 @@
+name: Build ClearVoice (Windows)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Collect plugin files
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item -Recurse "build/ClearVoice_artefacts/Release/VST3/ClearVoice.vst3" "dist/ClearVoice.vst3"
+          Copy-Item "build/ClearVoice_artefacts/Release/Standalone/ClearVoice.exe" "dist/ClearVoice-Standalone.exe"
+          Copy-Item README.md "dist/README.md"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ClearVoice-Windows
+          path: dist
